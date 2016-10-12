@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Reflection;
 using System.Runtime.Remoting.Messaging;
 using System.Security.Authentication;
 using System.Text;
@@ -200,7 +201,10 @@ namespace GoogleAPI
 		{
 			UserCredential userCredentials;
 
-			using (var stream = new FileStream("client_secret.json", FileMode.Open, FileAccess.Read))
+			using (var stream = new FileStream(
+					Path.Combine(
+						Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), 
+						"client_secret.json"), FileMode.Open, FileAccess.Read))
 			{
 				var secrets = GoogleClientSecrets.Load(stream).Secrets;
 
