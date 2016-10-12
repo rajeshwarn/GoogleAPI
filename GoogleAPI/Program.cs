@@ -84,7 +84,7 @@ namespace GoogleAPI
 
 				googleProject.Files.ForEach(
 					file => Console.WriteLine(
-						$"Id: {file.Id},\tName: {file.Name},\t Type: {file.Type},\tSource: {file.Source.Substring(0, 30)}"));
+						$"Id: {file.Id},\tName: {file.Name},\t Type: {file.Type},\tSource: {file.Source}"));
 			}
 			catch (Exception ex)
 			{
@@ -226,7 +226,7 @@ namespace GoogleAPI
 			try
 			{
 				var userCredentials = GetUserCredential();
-				Console.WriteLine($"Access Token : {userCredentials.Token}");
+				Console.WriteLine($"Access Token : {userCredentials?.Token?.AccessToken}");
 				return 0;
 			}
 			catch (Exception ex)
