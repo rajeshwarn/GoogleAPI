@@ -49,5 +49,14 @@ namespace GoogleAPI.Properties {
                 return ((string)(this["ApplicationName"]));
             }
         }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("https://www.googleapis.com/upload/drive/v2/files/{0}")]
+        public string Uri {
+            get {
+                return ((string)(this["Uri"]));
+            }
+        }
     }
 }

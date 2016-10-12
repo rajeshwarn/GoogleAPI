@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Newtonsoft.Json.Serialization;
+using Newtonsoft.Json;
 
 namespace GoogleAPI
 {
@@ -10,16 +12,25 @@ namespace GoogleAPI
 	{
 		public GoogleProject()
 		{
-			files = new List<GoogleScript>();
+			Files = new List<GoogleScript>();
 		}
-		public List<GoogleScript> files { get; }
+
+		[JsonProperty("files")]
+		public List<GoogleScript> Files { get; }
 
 		public class GoogleScript
 		{
-			public string id { get; set; }
-			public string name { get; set; }
-			public string type { get; set; }
-			public string source { get; set; }
+			[JsonProperty("id")]
+			public string Id { get; set; }
+
+			[JsonProperty("name")]
+			public string Name { get; set; }
+
+			[JsonProperty("type")]
+			public string Type { get; set; }
+
+			[JsonProperty("source")]
+			public string Source { get; set; }
 		}
 	}
 }

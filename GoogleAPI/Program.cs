@@ -48,7 +48,7 @@ namespace GoogleAPI
 				case "-GetToken":
 					return GetAccessToken();
 				case "-UploadJS":
-					return UploadJS(parameters).ConfigureAwait(false).GetAwaiter().GetResult();
+					return UploadJs(parameters).ConfigureAwait(false).GetAwaiter().GetResult();
 
 				default:
 					Console.WriteLine($"The command {command} is not implemented.");
@@ -56,7 +56,7 @@ namespace GoogleAPI
 			}
 		}
 
-		private static async Task<int> UploadJS(Dictionary<string, string> parameters)
+		private static async Task<int> UploadJs(Dictionary<string, string> parameters)
 		{
 			try
 			{
@@ -87,38 +87,7 @@ namespace GoogleAPI
 
 				var source = File.ReadAllText(scriptSource);
 
-				var userCredentials = GetUserCredential();
-
-				var result = await userCredentials.RefreshTokenAsync(CancellationToken.None).ConfigureAwait(false);
-
-				var uri = $"https://www.googleapis.com/upload/drive/v2/files/{projectId}";
-				var request = WebRequest.Create(uri);
-
-				var token = userCredentials?.Token.AccessToken;
-
-				request.Method = "PUT";
-				request.Headers.Add("Authorization", $"Bearer {token}");
-
-				// формирование json
-				var googleProject = new GoogleProject();
-				googleProject.files.Add(new GoogleProject.GoogleScript
-				{
-					id = scriptId,
-					name = scriptName,
-					type = "server_js",
-					source = source
-				});
-
-				var content = NewtonsoftJsonSerializer.Instance.Serialize(googleProject);
-
-				request.ContentType = "application/vnd.google-apps.script+json";
-				var contentBytes = Encoding.UTF8.GetBytes(content);
-				request.ContentLength = contentBytes.Length;
-
-				using (var requestStream = request.GetRequestStream())
-				{
-					requestStream.Write(contentBytes, 0, contentBytes.Length);
-				}
+				var request = await CreateRequest(projectId, scriptId, scriptName, source).ConfigureAwait(false);
 
 				var response = request.GetResponse();
 
@@ -129,6 +98,49 @@ namespace GoogleAPI
 				return 1;
 			}
 			return 0;
+		}
+
+		private static async Task<WebRequest> CreateRequest(string projectId,
+										string scriptId,
+										string scriptName,
+										string source)
+		{
+
+
+			var userCredentials = GetUserCredential();
+			if (userCredentials == null)
+				throw new InvalidCredentialException(nameof(userCredentials));
+
+			var uri = string.Format(Properties.Settings.Default.Uri, projectId);
+			var request = WebRequest.Create(uri);
+
+			var token = await userCredentials.GetAccessTokenForRequestAsync().ConfigureAwait(false);
+
+			request.Method = "PUT";
+			request.Headers.Add("Authorization", $"Bearer {token}");
+
+			// формирование json
+			var googleProject = new GoogleProject();
+			googleProject.Files.Add(new GoogleProject.GoogleScript
+			{
+				Id = scriptId,
+				Name = scriptName,
+				Type = "server_js",
+				Source = source
+			});
+
+			var content = NewtonsoftJsonSerializer.Instance.Serialize(googleProject);
+
+			request.ContentType = "application/vnd.google-apps.script+json";
+			var contentBytes = Encoding.UTF8.GetBytes(content);
+			request.ContentLength = contentBytes.Length;
+
+			using (var requestStream = request.GetRequestStream())
+			{
+				requestStream.Write(contentBytes, 0, contentBytes.Length);
+			}
+
+			return request;
 		}
 
 		private static UserCredential GetUserCredential()
@@ -182,21 +194,32 @@ namespace GoogleAPI
 			PrintParameter("-ScriptName", "Script name in Google App Project");
 			PrintParameter("-ScriptSource", "Path to JS file");
 
-			return 1;
+			return 0;
 		}
 
 		private static string PrintInfo(string template, string name, string description)
 		{
+			if(string.IsNullOrWhiteSpace(template))
+				throw new ArgumentException(nameof(template));
+			if(string.IsNullOrWhiteSpace(name))
+				throw new ArgumentException(nameof(name));
+
 			return string.Format(template, name, description);
 		}
 
 		private static void PrintCommand(string name, string description)
 		{
+			if (string.IsNullOrWhiteSpace(name))
+				throw new ArgumentException(nameof(name));
+
 			Console.WriteLine(PrintInfo(CommandTemplate, name, description));
 		}
 
 		private static void PrintParameter(string name, string description)
 		{
+			if (string.IsNullOrWhiteSpace(name))
+				throw new ArgumentException(nameof(name));
+
 			Console.WriteLine(PrintInfo(ParametersTemplate, name, description));
 		}
 
