@@ -4,6 +4,6 @@
     <ProjectView>ProjectFiles</ProjectView>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'">
-    <StartArguments>-UploadJS -ProjectId 1G7jXdNrdOPiQaYqebmKXmdHxPbMgtK3zmHnk8ziflfo1R2sLz4ksvIZ1 -ScriptId 0f07c1a0-fa24-4074-99a3-a81d16aa4ed6 -ScriptName Test -ScriptSource C:\Temp\GoogleScript.js</StartArguments>
+    <StartArguments>-ProjectListFiles -ProjectId 1G7jXdNrdOPiQaYqebmKXmdHxPbMgtK3zmHnk8ziflfo1R2sLz4ksvIZ1</StartArguments>
   </PropertyGroup>
 </Project>

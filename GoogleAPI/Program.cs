@@ -49,11 +49,48 @@ namespace GoogleAPI
 					return GetAccessToken();
 				case "-UploadJS":
 					return UploadJs(parameters).ConfigureAwait(false).GetAwaiter().GetResult();
-
+				case "-ProjectListFiles":
+					return GetProjectListFiles(parameters).ConfigureAwait(false).GetAwaiter().GetResult();
 				default:
 					Console.WriteLine($"The command {command} is not implemented.");
 					return 1;
 			}
+		}
+
+		private static async Task<int> GetProjectListFiles(Dictionary<string, string> parameters)
+		{
+			try
+			{
+				if (parameters.Count == 0)
+					throw new InvalidParameterException(nameof(parameters));
+
+				var projectId = parameters.ContainsKey("-ProjectId")
+					? parameters["-ProjectId"]
+					: null;
+				if (projectId == null)
+					throw new InvalidParameterException("The key \"-ProjectId\" is empty");
+
+				var request = await CreateRequestForProjectFiles(projectId).ConfigureAwait(false);
+
+				var response = request.GetResponse();
+
+				GoogleProject googleProject;
+
+				using (var responseStream = response.GetResponseStream())
+				{
+					googleProject = NewtonsoftJsonSerializer.Instance.Deserialize<GoogleProject>(responseStream);
+				}
+
+				googleProject.Files.ForEach(
+					file => Console.WriteLine(
+						$"Id: {file.Id},\tName: {file.Name},\t Type: {file.Type},\tSource: {file.Source.Substring(0, 30)}"));
+			}
+			catch (Exception ex)
+			{
+				Console.WriteLine(ex.Message);
+				return 1;
+			}
+			return 0;
 		}
 
 		private static async Task<int> UploadJs(Dictionary<string, string> parameters)
@@ -87,7 +124,7 @@ namespace GoogleAPI
 
 				var source = File.ReadAllText(scriptSource);
 
-				var request = await CreateRequest(projectId, scriptId, scriptName, source).ConfigureAwait(false);
+				var request = await CreateRequestForUploadGs(projectId, scriptId, scriptName, source).ConfigureAwait(false);
 
 				var response = request.GetResponse();
 
@@ -100,7 +137,7 @@ namespace GoogleAPI
 			return 0;
 		}
 
-		private static async Task<WebRequest> CreateRequest(string projectId,
+		private static async Task<WebRequest> CreateRequestForUploadGs(string projectId,
 										string scriptId,
 										string scriptName,
 										string source)
@@ -111,7 +148,7 @@ namespace GoogleAPI
 			if (userCredentials == null)
 				throw new InvalidCredentialException(nameof(userCredentials));
 
-			var uri = string.Format(Properties.Settings.Default.Uri, projectId);
+			var uri = string.Format(Properties.Settings.Default.UploadProjectUri, projectId);
 			var request = WebRequest.Create(uri);
 
 			var token = await userCredentials.GetAccessTokenForRequestAsync().ConfigureAwait(false);
@@ -119,7 +156,6 @@ namespace GoogleAPI
 			request.Method = "PUT";
 			request.Headers.Add("Authorization", $"Bearer {token}");
 
-			// формирование json
 			var googleProject = new GoogleProject();
 			googleProject.Files.Add(new GoogleProject.GoogleScript
 			{
@@ -139,6 +175,23 @@ namespace GoogleAPI
 			{
 				requestStream.Write(contentBytes, 0, contentBytes.Length);
 			}
+
+			return request;
+		}
+
+		private static async Task<WebRequest> CreateRequestForProjectFiles(string projectId)
+		{
+			var userCredentials = GetUserCredential();
+			if (userCredentials == null)
+				throw new InvalidCredentialException(nameof(userCredentials));
+
+			var uri = string.Format(Properties.Settings.Default.ListFilesUri, projectId);
+			var request = WebRequest.Create(uri);
+
+			var token = await userCredentials.GetAccessTokenForRequestAsync().ConfigureAwait(false);
+
+			request.Method = "GET";
+			request.Headers.Add("Authorization", $"Bearer {token}");
 
 			return request;
 		}
@@ -189,10 +242,13 @@ namespace GoogleAPI
 			PrintEmptyLine();
 
 			PrintCommand("-UploadJS", "Upload JS file into Google App Project on Google Drive");
-			PrintParameter("-ProjectId", "Project id, include uploading JS file");
-			PrintParameter("-ScriptId", "Script id in Google App Project");
+			PrintParameter("-ProjectId", "Project Id, include uploading JS file");
+			PrintParameter("-ScriptId", "Script Id in Google App Project");
 			PrintParameter("-ScriptName", "Script name in Google App Project");
 			PrintParameter("-ScriptSource", "Path to JS file");
+
+			PrintCommand("-ProjectListFiles", "Get list of files by google app project Id");
+			PrintParameter("-ProjectId", "Id of project");
 
 			return 0;
 		}

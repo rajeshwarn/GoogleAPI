@@ -11,8 +11,11 @@
     <Setting Name="ApplicationName" Type="System.String" Scope="Application">
       <Value Profile="(Default)">TestClient</Value>
     </Setting>
-    <Setting Name="Uri" Type="System.String" Scope="Application">
+    <Setting Name="UploadProjectUri" Type="System.String" Scope="Application">
       <Value Profile="(Default)">https://www.googleapis.com/upload/drive/v2/files/{0}</Value>
+    </Setting>
+    <Setting Name="ListFilesUri" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">https://script.google.com/feeds/download/export?id={0}&amp;format=json</Value>
     </Setting>
   </Settings>
 </SettingsFile>

@@ -53,9 +53,18 @@ namespace GoogleAPI.Properties {
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("https://www.googleapis.com/upload/drive/v2/files/{0}")]
-        public string Uri {
+        public string UploadProjectUri {
             get {
-                return ((string)(this["Uri"]));
+                return ((string)(this["UploadProjectUri"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("https://script.google.com/feeds/download/export?id={0}&format=json")]
+        public string ListFilesUri {
+            get {
+                return ((string)(this["ListFilesUri"]));
             }
         }
     }
