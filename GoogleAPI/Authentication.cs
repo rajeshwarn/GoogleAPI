@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using Google.Apis.Auth.OAuth2;
+using Google.Apis.Auth.OAuth2.Flows;
 using Google.Apis.Drive.v2;
 using Google.Apis.Services;
 using Google.Apis.Util.Store;
@@ -33,17 +35,31 @@ namespace GoogleAPI
 		{
 			try
 			{
+				var userDefineQueryParameters = new Dictionary<string, string>
+				{
+					{"approval_prompt", "force" }
+				};
+
+				GoogleAuthorizationCodeFlow.Initializer initializer = new GoogleAuthorizationCodeFlow.Initializer
+				{
+					UserDefinedQueryParams = userDefineQueryParameters,
+					ClientSecrets = new ClientSecrets
+					{
+						ClientId = clientId,
+						ClientSecret = clientSecret
+					}
+				};
+
+
 				// here is where we Request the user to give us access, or use the Refresh Token that was previously stored in %AppData%
 				return GoogleWebAuthorizationBroker
-										.AuthorizeAsync(new ClientSecrets
-																{
-																	ClientId = clientId,
-																	ClientSecret = clientSecret
-																}
+										.AuthorizeAsync(initializer
 														, Scopes
 														, userName
 														, CancellationToken.None
-														, new FileDataStore(Properties.Settings.Default.FileDataStore)
+														, new FileDataStore(
+						Path.Combine(Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+									Properties.Settings.Default.FileDataStore), true) 
 														, new ConfiguredLocalServerCodeReceiver()).Result;
 			}
 			catch (Exception ex)

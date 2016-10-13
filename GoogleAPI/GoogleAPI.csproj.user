@@ -4,6 +4,6 @@
     <ProjectView>ProjectFiles</ProjectView>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'">
-    <StartArguments>-ProjectListFiles -ProjectId 1_5zczUvKfWRWK2dNywNSD5l1J0fHnXYBNFbvzKF5lbCU6Y7Yn-Nm0Ueq</StartArguments>
+    <StartArguments>-ProjectListFiles -Init</StartArguments>
   </PropertyGroup>
 </Project>

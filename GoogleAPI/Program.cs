@@ -22,7 +22,8 @@ namespace GoogleAPI
 {
 	class Program
 	{
-		private static readonly string USER_NAME = Environment.UserName;
+		//private static readonly string USER_NAME = Environment.UserName;
+		private static readonly string USER_NAME = "User";
 		private static readonly string CommandTemplate = "Command: {0}\t\t\t- {1}.";
 		private static readonly string ParametersTemplate = "\tParameter: {0}\t\t- {1}.";
 
@@ -47,7 +48,7 @@ namespace GoogleAPI
 			{
 				case "-Init":
 				case "-GetToken":
-					return GetAccessToken();
+					return GetAccessToken().ConfigureAwait(false).GetAwaiter().GetResult();
 				case "-UploadJS":
 					return UploadJs(parameters).ConfigureAwait(false).GetAwaiter().GetResult();
 				case "-ProjectListFiles":
@@ -145,14 +146,14 @@ namespace GoogleAPI
 		{
 
 
-			var userCredentials = GetUserCredential();
+			var userCredentials = await GetUserCredential().ConfigureAwait(false);
 			if (userCredentials == null)
 				throw new InvalidCredentialException(nameof(userCredentials));
 
 			var uri = string.Format(Properties.Settings.Default.UploadProjectUri, projectId);
 			var request = WebRequest.Create(uri);
 
-			var token = await userCredentials.GetAccessTokenForRequestAsync().ConfigureAwait(false);
+			var token = userCredentials?.Token?.AccessToken;
 
 			request.Method = "PUT";
 			request.Headers.Add("Authorization", $"Bearer {token}");
@@ -182,14 +183,14 @@ namespace GoogleAPI
 
 		private static async Task<WebRequest> CreateRequestForProjectFiles(string projectId)
 		{
-			var userCredentials = GetUserCredential();
+			var userCredentials = await GetUserCredential().ConfigureAwait(false);
 			if (userCredentials == null)
 				throw new InvalidCredentialException(nameof(userCredentials));
 
 			var uri = string.Format(Properties.Settings.Default.ListFilesUri, projectId);
 			var request = WebRequest.Create(uri);
 
-			var token = await userCredentials.GetAccessTokenForRequestAsync().ConfigureAwait(false);
+			var token = userCredentials?.Token?.AccessToken;
 
 			request.Method = "GET";
 			request.Headers.Add("Authorization", $"Bearer {token}");
@@ -197,7 +198,7 @@ namespace GoogleAPI
 			return request;
 		}
 
-		private static UserCredential GetUserCredential()
+		private static async Task<UserCredential> GetUserCredential()
 		{
 			UserCredential userCredentials;
 
@@ -216,16 +217,21 @@ namespace GoogleAPI
 
 				if (userCredentials == null)
 					throw new InvalidCredentialException();
+
+				if (!userCredentials.Token.IsExpired(userCredentials.Flow.Clock)) return userCredentials;
+				var resultUpdate = await userCredentials.RefreshTokenAsync(CancellationToken.None);
+				if (resultUpdate)
+					Console.WriteLine("Token was update!");
 			}
 
 			return userCredentials;
 		}
 
-		private static int GetAccessToken()
+		private static async Task<int> GetAccessToken()
 		{
 			try
 			{
-				var userCredentials = GetUserCredential();
+				var userCredentials = await GetUserCredential().ConfigureAwait(false);
 				Console.WriteLine($"Access Token : {userCredentials?.Token?.AccessToken}");
 				return 0;
 			}
