@@ -22,8 +22,7 @@ namespace GoogleAPI
 {
 	class Program
 	{
-		//private static readonly string USER_NAME = Environment.UserName;
-		private static readonly string USER_NAME = "User";
+		private static readonly string UserName = "User";
 		private static readonly string CommandTemplate = "Command: {0}\t\t\t- {1}.";
 		private static readonly string ParametersTemplate = "\tParameter: {0}\t\t- {1}.";
 
@@ -59,6 +58,12 @@ namespace GoogleAPI
 			}
 		}
 
+		/// <summary>
+		/// Получение списка файлов включенных в Google Application Project
+		/// </summary>
+		/// <param name="parameters">Словарь параметров, обязательно должен содержать значения для
+		///  ключа "-ProjectId"</param>
+		/// <returns>Код возврата</returns>
 		private static async Task<int> GetProjectListFiles(Dictionary<string, string> parameters)
 		{
 			try
@@ -139,6 +144,16 @@ namespace GoogleAPI
 			return 0;
 		}
 
+		/// <summary>
+		/// Формировани запроса на обновления файла с кодом в Google Application Project
+		/// </summary>
+		/// <param name="projectId">Идентификатор Google Application Project</param>
+		/// <param name="scriptId">Идентификатор файла с кодом в Google Application Project. Чтобы
+		///  его узнать необходимо вызвать GetProjectListFiles, и передать идентификатор Google
+		///  Application Project</param>
+		/// <param name="scriptName">Имя файла с кодом</param>
+		/// <param name="source">Содержимое обновляемого файла</param>
+		/// <returns>Запрос</returns>
 		private static async Task<WebRequest> CreateRequestForUploadGs(string projectId,
 										string scriptId,
 										string scriptName,
@@ -181,6 +196,11 @@ namespace GoogleAPI
 			return request;
 		}
 
+		/// <summary>
+		/// Формирование запроса получения списка файлов включенных в Google Application Project
+		/// </summary>
+		/// <param name="projectId">Идентификатор Google Application Project</param>
+		/// <returns>Запрос</returns>
 		private static async Task<WebRequest> CreateRequestForProjectFiles(string projectId)
 		{
 			var userCredentials = await GetUserCredential().ConfigureAwait(false);
@@ -198,6 +218,11 @@ namespace GoogleAPI
 			return request;
 		}
 
+		/// <summary>
+		/// Получение удостоверяющих данных пользователя, во время получени, происходит обновление
+		///  токена доступа
+		/// </summary>
+		/// <returns>Удостоверяющие данные пользователя</returns>
 		private static async Task<UserCredential> GetUserCredential()
 		{
 			UserCredential userCredentials;
@@ -213,7 +238,7 @@ namespace GoogleAPI
 				var clientSecret = secrets.ClientSecret;
 
 
-				userCredentials = Authentication.AuthenticateOauth(clietnId, clientSecret, USER_NAME);
+				userCredentials = Authentication.AuthenticateOauth(clietnId, clientSecret, UserName);
 
 				if (userCredentials == null)
 					throw new InvalidCredentialException();
@@ -227,6 +252,10 @@ namespace GoogleAPI
 			return userCredentials;
 		}
 
+		/// <summary>
+		/// Вывод на экран токена доступа
+		/// </summary>
+		/// <returns>Код возврата</returns>
 		private static async Task<int> GetAccessToken()
 		{
 			try
@@ -242,6 +271,7 @@ namespace GoogleAPI
 			}
 		}
 
+		#region Help
 		private static int ShowHelp()
 		{ 
 			Console.WriteLine("Google API: -command -param1[...-paramN]");
@@ -293,5 +323,6 @@ namespace GoogleAPI
 		{
 			Console.WriteLine(Environment.NewLine);
 		}
+		#endregion
 	}
 }
